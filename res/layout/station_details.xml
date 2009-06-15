@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content">
+  
+  
+      <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1">
+        
+        <TextView
+            android:id="@+id/title"
+            android:text="Stellentitel"
+            android:textSize="9pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+        
+        <TextView
+            android:text=""
+            android:textSize="12pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+        
+        <TextView
+            android:id="@+id/employee"
+            android:text="Arbeitgeber"
+            android:textSize="9pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+        
+        <TextView
+            android:text=""
+            android:textSize="8pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+            
+            
+        <Button
+                android:id="@+id/openButton"
+                android:text="Anfrage senden"            
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                
+                />
+            
+  
+                  
+          
+        <TextView
+            android:id="@+id/feedback"
+            android:text=""
+            android:textSize="8pt"
+            android:textColor="#ff0000"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+            
+            
+                    <TextView
+            android:text=""
+            android:textSize="9pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+        
+              
+              <TextView
+            android:text="Ziel"
+            android:textSize="9pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+        
+                
+
+<EditText
+    android:id="@+id/edittext"
+    android:layout_width="fill_parent"
+    android:text="Mittelweg 44"
+    android:layout_height="wrap_content"/>
+>
+                
+              <TextView
+            android:text="Abfahrtszeit"
+            android:textSize="9pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+        
+                
+
+<EditText
+    android:id="@+id/edittime"
+    android:layout_width="fill_parent"
+    android:text="20:41"
+    android:layout_height="wrap_content"/>
+>
+
+    
+    
+    
+</LinearLayout>
+
+
+    
+      
+    
+    
+  
+  
+</LinearLayout>

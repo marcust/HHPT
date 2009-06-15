@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content">
+  
+     <TextView
+            android:id="@+id/title"
+            android:text="Provider:"
+            android:textSize="9pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+  
+  
+  <RadioGroup
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical">
+  
+  <RadioButton android:id="@+id/radio_vodafone"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:checked="true"
+      android:text="Vodafone" />
+  
+  <RadioButton android:id="@+id/radio_tmobile"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="T-Mobile" />
+  
+  <RadioButton android:id="@+id/radio_o2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="O2" />
+      
+  <RadioButton android:id="@+id/radio_eplus"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="E-Plus" />
+      
+      
+
+
+</RadioGroup>
+
+      <Button
+                android:id="@+id/okButton"
+                android:text="OK"            
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                
+                />
+            
+  
+</LinearLayout>
