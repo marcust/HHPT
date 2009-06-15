@@ -8,13 +8,13 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.search.FilteredQuery;
 import org.apache.lucene.search.Hit;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
+import org.thiesen.hhpt.geolookup.remote.GeoClient;
 import org.thiesen.hhpt.geolookup.remote.LookupException;
 import org.thiesen.hhpt.shared.io.StationReader;
 import org.thiesen.hhpt.shared.model.station.Station;
@@ -97,13 +97,13 @@ public class MainActivity extends MapActivity {
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        try {
-            prepareIndex();
-        } catch ( final IOException e ) {
-            showException( e ); 
-        }
+//        try {
+//            prepareIndex();
+//        } catch ( final IOException e ) {
+//            showException( e ); 
+//        }
 
-        
+
         _uiThreadCallback = new Handler();
 
         setContentView(R.layout.main);  
@@ -126,7 +126,7 @@ public class MainActivity extends MapActivity {
             buildAlertMessageNoGps();
         }         
 
-        updateLocation( 53.549758, 9.999323 );
+        //updateLocation( 53.549758, 9.999323 );
         useLastKnownLocation( manager );
         Log.v( TAG, "On create finished");
     }
@@ -291,9 +291,9 @@ public class MainActivity extends MapActivity {
             @Override public void run() {
 
                 try {
-                    //final Stations results = GeoClient.makeGeoLookup( lat, lon , DEFAULT_SEARCH_RADIUS_MILES );
+                    final Stations results = GeoClient.makeGeoLookup( lat, lon , DEFAULT_SEARCH_RADIUS_MILES );
 
-                    final Stations results = makeGeoLookup( lat, lon , DEFAULT_SEARCH_RADIUS_MILES );
+                    //final Stations results = makeGeoLookup( lat, lon , DEFAULT_SEARCH_RADIUS_MILES );
 
                     Log.d( TAG, "Found " + results.size() + " points" );
 
@@ -337,7 +337,7 @@ public class MainActivity extends MapActivity {
             final DistanceQuery dq = new DistanceQuery(lat, lon, defaultSearchRadiusMiles, "lat", "lng", true );
 
             //perform a reqular search
-            final Hits hits = _searcher.search( new FilteredQuery( new MatchAllDocsQuery(), dq.getFilter() ) );
+            final Hits hits = _searcher.search( new MatchAllDocsQuery(), dq.getFilter() );
 
             final Stations retval = new Stations();
             final Iterator<Hit> it = hits.iterator();
