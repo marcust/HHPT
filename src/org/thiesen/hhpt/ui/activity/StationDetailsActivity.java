@@ -66,7 +66,7 @@ public class StationDetailsActivity extends CustomActivity {
         
         openButton.setOnClickListener( new View.OnClickListener() {
         
-            public void onClick( final View v ) {
+            public void onClick( @SuppressWarnings("unused") final View v ) {
                 final SmsManager sms = SmsManager.getDefault();
                 
                 final String targetTimeValue = String.valueOf( targetTime.getText() );

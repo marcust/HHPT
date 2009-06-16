@@ -11,8 +11,14 @@
  */
 package org.thiesen.hhpt.geolookup.lucene;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.util.Iterator;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -32,19 +38,88 @@ import org.thiesen.hhpt.shared.io.StationReader;
 import org.thiesen.hhpt.shared.model.station.Station;
 import org.thiesen.hhpt.shared.model.station.Stations;
 
+import android.content.Context;
+
 import com.pjaol.search.geo.utils.DistanceQuery;
 
 public class LuceneStationFinder implements StationFinder {
 
+    private static final String  INDEX_FILE_NAME = "index_1.ser";
+    
     private Searcher _searcher;
+    private final Context _context;
+    
+    public LuceneStationFinder( final Context context ) {
+        _context = context;
+    }
     
     public void createIndex( final InputStream stations ) throws IOException {
+        final long startTime = System.currentTimeMillis();
+        
+        Directory d = tryLoadDirectory();
+
+        if ( d == null ) {
+            d = createDirectory( stations );
+        
+            storeDirectory( d );
+            
+           
+        }
+        _searcher = new IndexSearcher( d );
+
+        System.out.println("Indexing took " + ( System.currentTimeMillis() - startTime ) );
+    }                                                                                      
+
+    private void storeDirectory( final Directory d ) {
+            try {
+                final FileOutputStream openFileOutput = _context.openFileOutput( INDEX_FILE_NAME, Context.MODE_PRIVATE );
+                
+                final ObjectOutputStream oout = new ObjectOutputStream( openFileOutput );
+                
+                oout.writeObject( d );
+                
+                oout.close();
+                
+            } catch ( final FileNotFoundException e ) {
+                e.printStackTrace();
+            } catch ( final IOException e ) {
+                e.printStackTrace();
+            }
+            
+            
+    }
+
+    private Directory tryLoadDirectory() {
+        try {
+            final FileInputStream openFileInput = _context.openFileInput( INDEX_FILE_NAME );
+            
+            final ObjectInputStream inputStream = new ObjectInputStream( openFileInput );
+            
+            return (Directory) inputStream.readObject();
+            
+            
+        } catch ( final FileNotFoundException e ) {
+            e.printStackTrace();
+            return null;
+        } catch ( final StreamCorruptedException e ) {
+            e.printStackTrace();
+            return null;
+        } catch ( final IOException e ) {
+            e.printStackTrace();
+            return null;
+        } catch ( final ClassNotFoundException e ) {
+            e.printStackTrace();
+            return null;
+        }
+        
+    }
+
+    private Directory createDirectory( final InputStream stations ) throws IOException {
         final StationReader reader = new StationReader( stations );
         final Directory d = new RAMDirectory();                    
 
         final IndexWriter writer = new IndexWriter( d, new StandardAnalyzer() );
 
-        final long startTime = System.currentTimeMillis();
         for ( final Station s : reader ) {                
             addPoint( writer, s );                        
         }                                                 
@@ -52,10 +127,9 @@ public class LuceneStationFinder implements StationFinder {
         writer.optimize();
         writer.close();   
 
-        _searcher = new IndexSearcher( d );
-
-        System.out.println("Indexing took " + ( System.currentTimeMillis() - startTime ) );
-    }                                                                                      
+        return d;
+        
+    }
 
     /* Cited from Solr NumberUtil, Apache License */
     public static int long2sortableStr(final long ival, final char[] out, final int ioffset) {
@@ -88,11 +162,13 @@ public class LuceneStationFinder implements StationFinder {
     public Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles ) throws LookupException  {
         try {                                                                                                                            
 
-            final DistanceQuery dq = new DistanceQuery(lat, lon, defaultSearchRadiusMiles, "lat", "lng", false );
+            final DistanceQuery dq = new DistanceQuery(lat, lon, defaultSearchRadiusMiles, "lat", "lng", true );
 
             //perform a reqular search
             final Hits hits = _searcher.search( new MatchAllDocsQuery(), dq.getFilter() );
 
+            System.out.println( "Found " + hits.length() + " hits" );
+            
             final Stations retval = new Stations();
             final Iterator<Hit> it = hits.iterator();
             while ( it.hasNext() ) {                 
@@ -112,8 +188,8 @@ public class LuceneStationFinder implements StationFinder {
     private Station convert( final Document doc ) {
         return Station.createStation(              
                 doc.getField("id").stringValue(),  
-                doc.getField("lat").stringValue(), 
-                doc.getField("lng").stringValue(), 
+                doc.getField("lat_plain").stringValue(), 
+                doc.getField("lng_plain").stringValue(), 
                 doc.getField("type").stringValue(),
                 doc.getField("name").stringValue(),
                 doc.getField("operator").stringValue());
@@ -128,6 +204,8 @@ public class LuceneStationFinder implements StationFinder {
         doc.add(new Field("name", s.getName(),Field.Store.YES, Field.Index.UN_TOKENIZED));          
         doc.add(new Field("type", s.getType().toString(),Field.Store.YES, Field.Index.UN_TOKENIZED ));
         doc.add(new Field("operator", s.getOperator().stringValue(),Field.Store.YES, Field.Index.UN_TOKENIZED ));
+        doc.add(new Field("lat_plain", s.getPosition().getLatitude().toString(),Field.Store.YES, Field.Index.UN_TOKENIZED ));
+        doc.add(new Field("lng_plain", s.getPosition().getLongitude().toString(),Field.Store.YES, Field.Index.UN_TOKENIZED ));
 
 
         // convert the lat / long to lucene fields

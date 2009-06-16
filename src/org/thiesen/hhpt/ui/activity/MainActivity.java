@@ -5,7 +5,6 @@ import java.io.IOException;
 import org.thiesen.hhpt.geolookup.StationFinder;
 import org.thiesen.hhpt.geolookup.lucene.LuceneStationFinder;
 import org.thiesen.hhpt.geolookup.remote.LookupException;
-import org.thiesen.hhpt.geolookup.remote.RemoteStationFinder;
 import org.thiesen.hhpt.shared.model.station.Stations;
 import org.thiesen.hhpt.ui.map.StationMarkerLocationOverlay;
 import org.thiesen.hhpt.ui.map.TapListenerOverlay;
@@ -82,13 +81,14 @@ public class MainActivity extends MapActivity {
 
     private LocationManager _locationManager; 
     
-    private final StationFinder _finder = new LuceneStationFinder();
+    private StationFinder _finder;
     
     
     @Override  
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        _finder = new LuceneStationFinder( getApplicationContext() );
         _uiThreadCallback = new Handler();
         
         try {
@@ -117,7 +117,7 @@ public class MainActivity extends MapActivity {
             buildAlertMessageNoGps();
         }         
 
-        //updateLocation( 53.549758, 9.999323 );
+        updateLocation( 53.549758, 9.999323 );
         useLastKnownLocation( _locationManager );
         Log.v( TAG, "On create finished");
     }

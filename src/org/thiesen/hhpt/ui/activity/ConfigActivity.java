@@ -41,7 +41,7 @@ public class ConfigActivity extends CustomActivity {
         
         okButton.setOnClickListener( new View.OnClickListener() {
         
-            public void onClick( final View v ) {
+            public void onClick( @SuppressWarnings("unused") final View v ) {
                 
                 if ( vodafoneButton.isChecked() ) {
                     preferences().setSelectedCarrier( Carriers.VODAFONE );
