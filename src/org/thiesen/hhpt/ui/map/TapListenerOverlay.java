@@ -1,14 +1,24 @@
 /*
  * $ Id $
- * (c) Copyright 2009 freiheit.com technologies gmbh
+ * (c) Copyright 2009 Marcus Thiesen (marcus@thiesen.org)
  *
- * This file contains unpublished, proprietary trade secret information of
- * freiheit.com technologies gmbh. Use, transcription, duplication and
- * modification are strictly prohibited without prior written consent of
- * freiheit.com technologies gmbh.
+ *  This file is part of HHPT.
  *
- * Initial version by Marcus Thiesen (marcus.thiesen@freiheit.com)
+ *  HHPT is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  HHPT is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with HHPT.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
+
 package org.thiesen.hhpt.ui.map;
 
 import org.thiesen.hhpt.ui.activity.MainActivity;
@@ -55,7 +65,7 @@ public class TapListenerOverlay extends Overlay {
         
         Log.d( MainActivity.TAG, "Distance is " + _results[0] + " m" );
         
-        if ( ( _results[0] / 1000 ) * 0.621371192 > MainActivity.DEFAULT_SEARCH_RADIUS_MILES ) {
+        if ( ( _results[0] / 1000 ) * 0.621371192 > MainActivity.DEFAULT_SEARCH_RADIUS_MILES / 2 ) {
             _oldCenter = currentCenter;
             _shower.getAndDisplayResultsFor( currentCenter );
         }

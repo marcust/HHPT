@@ -1,3 +1,24 @@
+/*
+ * $ Id $
+ * (c) Copyright 2009 Marcus Thiesen (marcus@thiesen.org)
+ *
+ *  This file is part of HHPT.
+ *
+ *  HHPT is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  HHPT is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with HHPT.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package org.thiesen.hhpt.ui.activity;
 
 import java.io.IOException;
@@ -119,7 +140,6 @@ public class MainActivity extends MapActivity {
             buildAlertMessageNoGps();
         }         
 
-        updateLocation( 53.549758, 9.999323 );
         useLastKnownLocation( _locationManager );
         Log.v( TAG, "On create finished");
     }
@@ -136,6 +156,7 @@ public class MainActivity extends MapActivity {
     protected void onPause() {
         super.onPause();
         unregisterLocationListener();
+        _myLocationOverlay.disableMyLocation();
         _paused = true;
     }
 
@@ -143,6 +164,7 @@ public class MainActivity extends MapActivity {
     protected void onResume() {
         super.onResume();
         registerLocationListener();
+        _myLocationOverlay.enableMyLocation();
         _paused = false;
     }
 
@@ -230,8 +252,8 @@ public class MainActivity extends MapActivity {
         final GeoPoint myLocation = _myLocationOverlay.getMyLocation();
 
         if ( myLocation != null ) {
-            _mc.animateTo( myLocation );
             updateLocation( myLocation );
+            _mc.animateTo( myLocation );
         } else {
             showNoLocationDialog();
         }
