@@ -35,7 +35,7 @@ public class TapListenerOverlay extends Overlay {
     }
     
     @Override
-    public boolean onTouchEvent( final MotionEvent e, final MapView mapView ) {
+    public boolean onTouchEvent( @SuppressWarnings("unused") final MotionEvent e, final MapView mapView ) {
         if ( _oldCenter == null ) {
             _oldCenter = mapView.getMapCenter();
         }

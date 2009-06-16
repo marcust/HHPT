@@ -2,7 +2,6 @@ package org.thiesen.hhpt.ui.activity;
 
 import java.io.IOException;
 
-import org.apache.http.HttpException;
 import org.thiesen.hhpt.geolookup.LookupException;
 import org.thiesen.hhpt.geolookup.StationFinder;
 import org.thiesen.hhpt.geolookup.lucene.LuceneStationFinder;
@@ -151,7 +150,7 @@ public class MainActivity extends MapActivity {
     public boolean onCreateOptionsMenu( final Menu menu ) {
         menu.add(0, MENU_SHOW_POSITION, 0, "Show Position" ).setIcon( android.R.drawable.ic_menu_mylocation );
         menu.add(0, MENU_CONFIG, 0, "Configuration" ).setIcon( android.R.drawable.ic_menu_preferences );
-        menu.add(0, MENU_UPDATE, 0, "Update" ).setIcon( android.R.drawable.ic_menu_upload );
+        //menu.add(0, MENU_UPDATE, 0, "Update" ).setIcon( android.R.drawable.ic_menu_upload );
 
         return true;
     }
@@ -176,7 +175,7 @@ public class MainActivity extends MapActivity {
 
     private void updateData() {
 
-        final ProgressDialog pd = ProgressDialog.show( this, "Update in Progress", "Download file from OpenStreetMap (ca. 6 MB)..." );   
+        final ProgressDialog pd = ProgressDialog.show( this, "Update in Progress", "Download and parsing file from OpenStreetMap (ca. 6 MB)..." );   
 
         pd.show();
 
