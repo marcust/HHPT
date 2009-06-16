@@ -162,7 +162,7 @@ public class LuceneStationFinder implements StationFinder {
     public Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles ) throws LookupException  {
         try {                                                                                                                            
 
-            final DistanceQuery dq = new DistanceQuery(lat, lon, defaultSearchRadiusMiles, "lat", "lng", true );
+            final DistanceQuery dq = new DistanceQuery(lat, lon, defaultSearchRadiusMiles, "lat", "lng", false );
 
             //perform a reqular search
             final Hits hits = _searcher.search( new MatchAllDocsQuery(), dq.getFilter() );
