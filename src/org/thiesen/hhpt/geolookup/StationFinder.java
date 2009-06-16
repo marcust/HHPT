@@ -14,7 +14,6 @@ package org.thiesen.hhpt.geolookup;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.thiesen.hhpt.geolookup.remote.LookupException;
 import org.thiesen.hhpt.shared.model.station.Stations;
 
 public interface StationFinder {
@@ -22,5 +21,7 @@ public interface StationFinder {
     void createIndex( InputStream openRawResource ) throws IOException;
 
     Stations makeGeoLookup( double lat, double lon, double defaultSearchRadiusMiles ) throws LookupException;
+
+    void updateIndex( Stations newOSMStations ) throws IOException;
 
 }

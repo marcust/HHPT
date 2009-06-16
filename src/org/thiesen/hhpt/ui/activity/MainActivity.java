@@ -2,14 +2,17 @@ package org.thiesen.hhpt.ui.activity;
 
 import java.io.IOException;
 
+import org.apache.http.HttpException;
+import org.thiesen.hhpt.geolookup.LookupException;
 import org.thiesen.hhpt.geolookup.StationFinder;
 import org.thiesen.hhpt.geolookup.lucene.LuceneStationFinder;
-import org.thiesen.hhpt.geolookup.remote.LookupException;
+import org.thiesen.hhpt.osm.OSMUpdater;
 import org.thiesen.hhpt.shared.model.station.Stations;
 import org.thiesen.hhpt.ui.map.StationMarkerLocationOverlay;
 import org.thiesen.hhpt.ui.map.TapListenerOverlay;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -55,7 +58,6 @@ public class MainActivity extends MapActivity {
         }
     }
 
-
     public final static String TAG = "HHPT";
 
     private MapView _mapView;  
@@ -66,6 +68,7 @@ public class MainActivity extends MapActivity {
 
     private static final int MENU_SHOW_POSITION = 1;
     private static final int MENU_CONFIG = 2;  
+    private static final int MENU_UPDATE = 3;
 
     private MyLocationOverlay _myLocationOverlay;
 
@@ -80,17 +83,17 @@ public class MainActivity extends MapActivity {
     private final LocationListener _listener =  new LocationListenerImpl();
 
     private LocationManager _locationManager; 
-    
+
     private StationFinder _finder;
-    
-    
+
+
     @Override  
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         _finder = new LuceneStationFinder( getApplicationContext() );
         _uiThreadCallback = new Handler();
-        
+
         try {
             _finder.createIndex( getResources().openRawResource( R.raw.stations ) );
         } catch ( final IOException e ) {
@@ -146,8 +149,9 @@ public class MainActivity extends MapActivity {
 
     @Override
     public boolean onCreateOptionsMenu( final Menu menu ) {
-        menu.add(0, MENU_SHOW_POSITION, 0, "Show Position" );
-        menu.add(0, MENU_CONFIG, 0, "Configuration" );
+        menu.add(0, MENU_SHOW_POSITION, 0, "Show Position" ).setIcon( android.R.drawable.ic_menu_mylocation );
+        menu.add(0, MENU_CONFIG, 0, "Configuration" ).setIcon( android.R.drawable.ic_menu_preferences );
+        menu.add(0, MENU_UPDATE, 0, "Update" ).setIcon( android.R.drawable.ic_menu_upload );
 
         return true;
     }
@@ -157,23 +161,81 @@ public class MainActivity extends MapActivity {
     public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case MENU_SHOW_POSITION:
-                final GeoPoint myLocation = _myLocationOverlay.getMyLocation();
-
-                if ( myLocation != null ) {
-                    _mc.animateTo( myLocation );
-                    updateLocation( myLocation );
-                } else {
-                    showNoLocationDialog();
-                }
+                showPosition();
                 return true;
             case MENU_CONFIG: 
-                final Intent intend = new Intent( getApplicationContext(), ConfigActivity.class );
-                startActivity( intend );
-
-
+                showConfig();
                 return true;
+            case MENU_UPDATE:
+                updateData();
+                return true;
+
         }
         return false;
+    }
+
+    private void updateData() {
+
+        final ProgressDialog pd = ProgressDialog.show( this, "Update in Progress", "Download file from OpenStreetMap (ca. 6 MB)..." );   
+
+        pd.show();
+
+        new Thread() {
+
+            @Override
+            public void run() {
+                try {
+                    final Stations newOSMStations = OSMUpdater.getNewOSMStations();
+
+                    _uiThreadCallback.post( new Runnable() {
+                        
+                        public void run() {
+                            pd.setMessage( "Updating Search Index" );
+                        }
+                    } );
+                    
+                    _finder.updateIndex( newOSMStations );
+
+                    _uiThreadCallback.post( new Runnable() {
+                        
+                        public void run() {
+                            pd.dismiss();
+                        }
+                    } );
+
+
+                } catch ( final IOException e ) {
+                    _uiThreadCallback.post( new Runnable() {
+                        
+                        public void run() {
+                            pd.dismiss();
+                            showException( e );
+                        }
+                    } );
+                }
+
+            } 
+
+        }.start();
+        
+
+
+    }
+
+    private void showConfig() {
+        final Intent intend = new Intent( getApplicationContext(), ConfigActivity.class );
+        startActivity( intend );
+    }
+
+    private void showPosition() {
+        final GeoPoint myLocation = _myLocationOverlay.getMyLocation();
+
+        if ( myLocation != null ) {
+            _mc.animateTo( myLocation );
+            updateLocation( myLocation );
+        } else {
+            showNoLocationDialog();
+        }
     }
 
     private void useLastKnownLocation( final LocationManager manager ) {
@@ -221,8 +283,6 @@ public class MainActivity extends MapActivity {
 
 
     private void getAndDisplayResultsFor( final double lat, final double lon ) {
-        // allows non-"edt" thread to be re-inserted into the "edt" queue
-
         if ( _paused ) return;
 
 
@@ -234,7 +294,7 @@ public class MainActivity extends MapActivity {
 
                 try {
                     final Stations results = _finder.makeGeoLookup( lat, lon, DEFAULT_SEARCH_RADIUS_MILES );
-              
+
                     Log.d( TAG, "Found " + results.size() + " points" );
 
                     final StationMarkerLocationOverlay overlay = new StationMarkerLocationOverlay( that, results, _busBmp, _trainBmp );
@@ -264,7 +324,7 @@ public class MainActivity extends MapActivity {
                 } 
             }
 
-            
+
 
         }.start();
 

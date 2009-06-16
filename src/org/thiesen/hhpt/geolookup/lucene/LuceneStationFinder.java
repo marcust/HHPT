@@ -24,23 +24,24 @@ import java.util.Iterator;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.Hit;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Searcher;
+import org.apache.lucene.spatial.tier.LatLongDistanceFilter;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.RAMDirectory;
+import org.thiesen.hhpt.geolookup.LookupException;
 import org.thiesen.hhpt.geolookup.StationFinder;
-import org.thiesen.hhpt.geolookup.remote.LookupException;
 import org.thiesen.hhpt.shared.io.StationReader;
 import org.thiesen.hhpt.shared.model.station.Station;
 import org.thiesen.hhpt.shared.model.station.Stations;
 
 import android.content.Context;
-
-import com.pjaol.search.geo.utils.DistanceQuery;
 
 public class LuceneStationFinder implements StationFinder {
 
@@ -62,7 +63,6 @@ public class LuceneStationFinder implements StationFinder {
             d = createDirectory( stations );
         
             storeDirectory( d );
-            
            
         }
         _searcher = new IndexSearcher( d );
@@ -116,11 +116,16 @@ public class LuceneStationFinder implements StationFinder {
 
     private Directory createDirectory( final InputStream stations ) throws IOException {
         final StationReader reader = new StationReader( stations );
+        return createNewDirectory( reader );
+        
+    }
+
+    private Directory createNewDirectory( final Iterable<Station> stations ) throws CorruptIndexException, LockObtainFailedException, IOException {
         final Directory d = new RAMDirectory();                    
 
         final IndexWriter writer = new IndexWriter( d, new StandardAnalyzer() );
 
-        for ( final Station s : reader ) {                
+        for ( final Station s : stations ) {                
             addPoint( writer, s );                        
         }                                                 
 
@@ -128,7 +133,6 @@ public class LuceneStationFinder implements StationFinder {
         writer.close();   
 
         return d;
-        
     }
 
     /* Cited from Solr NumberUtil, Apache License */
@@ -162,10 +166,9 @@ public class LuceneStationFinder implements StationFinder {
     public Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles ) throws LookupException  {
         try {                                                                                                                            
 
-            final DistanceQuery dq = new DistanceQuery(lat, lon, defaultSearchRadiusMiles, "lat", "lng", false );
-
-            //perform a reqular search
-            final Hits hits = _searcher.search( new MatchAllDocsQuery(), dq.getFilter() );
+            final LatLongDistanceFilter filter = new LatLongDistanceFilter( lat, lon, defaultSearchRadiusMiles, "lat", "lng" );
+            
+            final Hits hits = _searcher.search( new MatchAllDocsQuery(), filter );
 
             System.out.println( "Found " + hits.length() + " hits" );
             
@@ -213,6 +216,14 @@ public class LuceneStationFinder implements StationFinder {
         doc.add(new Field("lng", double2sortableStr(s.getPosition().getLongitude().doubleValue()),Field.Store.YES, Field.Index.UN_TOKENIZED));
 
         writer.addDocument(doc);
+    }
+
+    public void updateIndex( final Stations newOSMStations ) throws IOException {
+       final Directory d = createNewDirectory( newOSMStations );
+       storeDirectory( d );
+           
+        _searcher = new IndexSearcher( d );
+        
     }                           
 
 
