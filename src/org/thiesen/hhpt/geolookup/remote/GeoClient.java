@@ -90,7 +90,7 @@ public class GeoClient {
         return url.toString();
     }
 
-    public static Stations makeGeoLookup( final double lat, final double lon, final double radius ) throws LookupException {
+    static Stations makeGeoLookup( final double lat, final double lon, final double radius ) throws LookupException {
         return makeGeoLookup( Latitude.valueOf( lat ), Longitude.valueOf( lon ), Radius.valueOf( radius ) );
     }
 
