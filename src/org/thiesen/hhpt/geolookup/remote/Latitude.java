@@ -16,6 +16,7 @@ import java.io.Serializable;
 
 public class Latitude implements Serializable {
     
+    private static final long serialVersionUID = 5369362391583755772L;
     private final Double _valueInDegrees;
     
     private Latitude( final Double valueInDegrees ) {

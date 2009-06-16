@@ -1,23 +1,11 @@
 package org.thiesen.hhpt.ui.activity;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
 
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.search.Hit;
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
-import org.thiesen.hhpt.geolookup.remote.GeoClient;
+import org.thiesen.hhpt.geolookup.StationFinder;
+import org.thiesen.hhpt.geolookup.lucene.LuceneStationFinder;
 import org.thiesen.hhpt.geolookup.remote.LookupException;
-import org.thiesen.hhpt.shared.io.StationReader;
-import org.thiesen.hhpt.shared.model.station.Station;
+import org.thiesen.hhpt.geolookup.remote.RemoteStationFinder;
 import org.thiesen.hhpt.shared.model.station.Stations;
 import org.thiesen.hhpt.ui.map.StationMarkerLocationOverlay;
 import org.thiesen.hhpt.ui.map.TapListenerOverlay;
@@ -44,20 +32,20 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
-import com.pjaol.search.geo.utils.DistanceQuery;
 
 public class MainActivity extends MapActivity {
 
     private class LocationListenerImpl implements LocationListener {
+        @SuppressWarnings("unused") 
         public void onStatusChanged( final String provider, final int status, final Bundle extras ) {
             // do nothing;
         }
 
-        public void onProviderEnabled( final String provider ) {
+        public void onProviderEnabled( @SuppressWarnings("unused")  final String provider ) {
             // do nothing;
         }
 
-        public void onProviderDisabled( final String provider ) {
+        public void onProviderDisabled( @SuppressWarnings("unused")  final String provider ) {
             // do nothing;
         }
 
@@ -90,21 +78,24 @@ public class MainActivity extends MapActivity {
 
     private boolean _paused;
 
-    private IndexSearcher _searcher;
+    private final LocationListener _listener =  new LocationListenerImpl();
 
-
+    private LocationManager _locationManager; 
+    
+    private final StationFinder _finder = new LuceneStationFinder();
+    
+    
     @Override  
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        try {
-//            prepareIndex();
-//        } catch ( final IOException e ) {
-//            showException( e ); 
-//        }
-
-
         _uiThreadCallback = new Handler();
+        
+        try {
+            _finder.createIndex( getResources().openRawResource( R.raw.stations ) );
+        } catch ( final IOException e ) {
+            showException( e );
+        }
 
         setContentView(R.layout.main);  
         _mapView = (MapView) findViewById(R.id.map);
@@ -116,81 +107,40 @@ public class MainActivity extends MapActivity {
 
         _paused = false;
 
-        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
+        _locationManager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
 
         initMyLocationOverview();
 
-        manager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 1000, 20, new LocationListenerImpl() );
+        registerLocationListener();
 
-        if ( !manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+        if ( !_locationManager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
             buildAlertMessageNoGps();
         }         
 
         //updateLocation( 53.549758, 9.999323 );
-        useLastKnownLocation( manager );
+        useLastKnownLocation( _locationManager );
         Log.v( TAG, "On create finished");
     }
 
-
-    private void prepareIndex() throws IOException {
-        final InputStream stations = getResources().openRawResource( R.raw.stations );
-
-        final StationReader reader = new StationReader( stations );
-        final Directory d = new RAMDirectory();
-
-        final IndexWriter writer = new IndexWriter( d, new StandardAnalyzer() );
-
-        final long startTime = System.currentTimeMillis();
-        for ( final Station s : reader ) {
-            addPoint( writer, s );
-        }
-
-        writer.optimize();
-        writer.close();
-
-        _searcher = new IndexSearcher( d );
-
-        System.out.println("Indexing took " + ( System.currentTimeMillis() - startTime ) );
+    private void unregisterLocationListener() {
+        _locationManager.removeUpdates( _listener );
     }
 
-    /* Cited from Solr NumberUtil, Apache License */
-    public static int long2sortableStr(final long ival, final char[] out, final int ioffset) {
-        final long val = ival + Long.MIN_VALUE;
-        int offset = ioffset;
-        out[offset++] = (char)(val >>>60);
-        out[offset++] = (char)(val >>>45 & 0x7fff);
-        out[offset++] = (char)(val >>>30 & 0x7fff);
-        out[offset++] = (char)(val >>>15 & 0x7fff);
-        out[offset] = (char)(val & 0x7fff);
-        return 5;
+    private void registerLocationListener() {
+        _locationManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 1000, 20, _listener );
     }
-
-
-    public static String long2sortableStr(final long val) {
-        final char[] arr = new char[5];
-        long2sortableStr(val,arr,0);
-        return new String(arr,0,5);
-    }
-
-    public static String double2sortableStr(final double val) {
-        long f = Double.doubleToRawLongBits(val);
-        if (f<0) f ^= 0x7fffffffffffffffL;
-        return long2sortableStr(f);
-    }
-    /* End Citation */
-
-
-
 
     @Override
     protected void onPause() {
         super.onPause();
+        unregisterLocationListener();
         _paused = true;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        registerLocationListener();
         _paused = false;
     }
 
@@ -226,7 +176,6 @@ public class MainActivity extends MapActivity {
         return false;
     }
 
-
     private void useLastKnownLocation( final LocationManager manager ) {
         final Location lastKnownLocation = manager.getLastKnownLocation( LocationManager.GPS_PROVIDER );
         if ( lastKnownLocation != null ) {
@@ -236,22 +185,18 @@ public class MainActivity extends MapActivity {
         }
     }
 
-
-
     private void showNoLocationDialog() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         builder.setMessage( "No location" ).setPositiveButton( "OK", new DialogInterface.OnClickListener() {
 
-            public void onClick( final DialogInterface dialog, final int which ) {
+            public void onClick( final DialogInterface dialog, @SuppressWarnings("unused") final int which ) {
                 dialog.cancel();
             }
         } );
 
         builder.show();
     }
-
-
 
     private void updateLocation( final GeoPoint myLocation ) {
         updateLocation( myLocation.getLatitudeE6() / 1E6D, myLocation.getLongitudeE6()  / 1E6D );   
@@ -262,7 +207,6 @@ public class MainActivity extends MapActivity {
 
     }
 
-
     private void updateLocation( final double lat, final double lon ) {
         Log.d( TAG, "Starting updateLocation " + lat + ", " + lon );
 
@@ -272,8 +216,6 @@ public class MainActivity extends MapActivity {
 
 
         getAndDisplayResultsFor( lat, lon );
-
-
     }
 
 
@@ -291,12 +233,9 @@ public class MainActivity extends MapActivity {
             @Override public void run() {
 
                 try {
-                    final Stations results = GeoClient.makeGeoLookup( lat, lon , DEFAULT_SEARCH_RADIUS_MILES );
-
-                    //final Stations results = makeGeoLookup( lat, lon , DEFAULT_SEARCH_RADIUS_MILES );
-
+                    final Stations results = _finder.makeGeoLookup( lat, lon, DEFAULT_SEARCH_RADIUS_MILES );
+              
                     Log.d( TAG, "Found " + results.size() + " points" );
-
 
                     final StationMarkerLocationOverlay overlay = new StationMarkerLocationOverlay( that, results, _busBmp, _trainBmp );
 
@@ -325,64 +264,11 @@ public class MainActivity extends MapActivity {
                 } 
             }
 
+            
 
         }.start();
 
-
     }
-
-    private Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles ) throws LookupException  {
-        try {
-
-            final DistanceQuery dq = new DistanceQuery(lat, lon, defaultSearchRadiusMiles, "lat", "lng", true );
-
-            //perform a reqular search
-            final Hits hits = _searcher.search( new MatchAllDocsQuery(), dq.getFilter() );
-
-            final Stations retval = new Stations();
-            final Iterator<Hit> it = hits.iterator();
-            while ( it.hasNext() ) {
-                final Hit hit = it.next();
-
-
-                retval.add( convert( hit.getDocument() ) );
-            }
-
-            return retval;
-
-        } catch ( final IOException e ) {
-            throw new LookupException( e );
-        }
-    }
-
-    private Station convert( final Document doc ) {
-        return Station.createStation( 
-                doc.getField("id").stringValue(),
-                doc.getField("lat").stringValue(),
-                doc.getField("lng").stringValue(),
-                doc.getField("type").stringValue(),
-                doc.getField("name").stringValue(),
-                doc.getField("operator").stringValue());
-    }
-
-
-    private static void addPoint(final IndexWriter writer, final Station s ) throws IOException{
-
-        final org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
-
-        doc.add(new Field("id", s.getId().stringValue(),Field.Store.YES, Field.Index.UN_TOKENIZED));
-        doc.add(new Field("name", s.getName(),Field.Store.YES, Field.Index.UN_TOKENIZED));
-        doc.add(new Field("type", s.getType().toString(),Field.Store.YES, Field.Index.UN_TOKENIZED ));
-        doc.add(new Field("operator", s.getOperator().stringValue(),Field.Store.YES, Field.Index.UN_TOKENIZED ));
-
-
-        // convert the lat / long to lucene fields
-        doc.add(new Field("lat", double2sortableStr(s.getPosition().getLatitude().doubleValue()),Field.Store.YES, Field.Index.UN_TOKENIZED));
-        doc.add(new Field("lng", double2sortableStr(s.getPosition().getLongitude().doubleValue()),Field.Store.YES, Field.Index.UN_TOKENIZED));
-
-        writer.addDocument(doc);
-    }
-
 
     private void launchGPSOptions() {
         final ComponentName toLaunch = new ComponentName("com.android.settings","com.android.settings.SecuritySettings");
@@ -431,7 +317,7 @@ public class MainActivity extends MapActivity {
 
         builder.setMessage( "Fatal Error: " + e.getMessage() ).setPositiveButton( "OK", new DialogInterface.OnClickListener() {
 
-            public void onClick( final DialogInterface dialog, final int which ) {
+            public void onClick( final DialogInterface dialog, @SuppressWarnings("unused")  final int which ) {
                 dialog.cancel();
             }
         } );

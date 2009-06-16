@@ -14,6 +14,8 @@ package org.thiesen.hhpt.geolookup.remote;
 
 public class LookupException extends Exception {
 
+    private static final long serialVersionUID = -264948864807882346L;
+
     public LookupException() {
         super();
     }

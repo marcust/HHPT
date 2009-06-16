@@ -16,6 +16,7 @@ import java.io.Serializable;
 
 public class Longitude implements Serializable {
 
+    private static final long serialVersionUID = 6038946019135325599L;
     private final Double _valueInDegrees;
     
     private Longitude( final Double valueInDegrees ) {
