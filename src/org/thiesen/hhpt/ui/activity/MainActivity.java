@@ -163,9 +163,10 @@ public class MainActivity extends MapActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        _paused = false;
         registerLocationListener();
         _myLocationOverlay.enableMyLocation();
-        _paused = false;
+        updateLocation( _mapView.getMapCenter() );
     }
 
     @Override
