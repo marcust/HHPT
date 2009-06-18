@@ -16,21 +16,18 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import org.thiesen.hhpt.geolookup.LookupException;
-import org.thiesen.hhpt.shared.model.position.Position;
 import org.thiesen.hhpt.shared.model.station.Station;
 import org.thiesen.hhpt.shared.model.station.Stations;
 import org.thiesen.hhpt.ui.map.overlay.BaseStationMarkerOverlay;
 
-import android.app.ProgressDialog;
 import android.graphics.Bitmap;
-import android.util.Log;
 
 final class SearcherThread extends Thread {
     private final MainActivity _mainActivity;
-    private final BlockingQueue<Position> _mySearchRequestQueue;
+    private final BlockingQueue<LookupPosition> _mySearchRequestQueue;
     private final Set<Station> _displayedStations;
 
-    SearcherThread( final MainActivity mainActivity, final BlockingQueue<Position> requestQueue ) {
+    SearcherThread( final MainActivity mainActivity, final BlockingQueue<LookupPosition> requestQueue ) {
         _displayedStations = new HashSet<Station>();
         
         _mainActivity = mainActivity;
@@ -42,12 +39,12 @@ final class SearcherThread extends Thread {
         while ( true  ) {
         try {
             
-            final Position position = _mySearchRequestQueue.take();
+            final LookupPosition position = _mySearchRequestQueue.take();
             
             final long startTime = System.currentTimeMillis();
    
-            final Stations results = _mainActivity._finder.makeGeoLookup( position.getLatitude().doubleValue(), 
-                                                            position.getLongitude().doubleValue(),
+            final Stations results = _mainActivity._finder.makeGeoLookup( position.getLatitude(), 
+                                                            position.getLongitude(),
                                                             MainActivity.DEFAULT_SEARCH_RADIUS_MILES );
 
             System.out.println("Searching took " + ( System.currentTimeMillis() - startTime ) + " ms, found " + results.size() + " points" );
@@ -55,9 +52,6 @@ final class SearcherThread extends Thread {
             for ( final Station s : results ) {
                 addOverlayToMapView( s );
             }
-
-
-          
           
         } catch ( final LookupException e ) {
             _mainActivity._uiThreadCallback.post( new Runnable() {

@@ -21,7 +21,7 @@
 
 package org.thiesen.hhpt.ui.map;
 
-import org.thiesen.hhpt.ui.activity.MainActivity;
+import org.thiesen.hhpt.ui.activity.main.MainActivity;
 
 import android.location.Location;
 import android.util.Log;

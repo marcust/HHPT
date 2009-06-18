@@ -26,10 +26,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.thiesen.hhpt.geolookup.StationFinder;
-import org.thiesen.hhpt.geolookup.lucene.LuceneStationFinder;
-import org.thiesen.hhpt.osm.OSMUpdater;
-import org.thiesen.hhpt.shared.model.position.Position;
-import org.thiesen.hhpt.shared.model.station.Stations;
+import org.thiesen.hhpt.geolookup.geohash.GeohashStationFinder;
 import org.thiesen.hhpt.ui.activity.ConfigActivity;
 import org.thiesen.hhpt.ui.activity.R;
 import org.thiesen.hhpt.ui.map.TapListenerOverlay;
@@ -66,11 +63,12 @@ public class MainActivity extends MapActivity {
     private MapController _mc;  
     private final static int DEFAULT_ZOOM_VALUE = 17;
 
-    public static final double DEFAULT_SEARCH_RADIUS_MILES = 1.0D;
+    public static final double DEFAULT_SEARCH_RADIUS_MILES = 3.5D;
 
     private static final int MENU_SHOW_POSITION = 1;
     private static final int MENU_CONFIG = 2;  
     private static final int MENU_UPDATE = 3;
+    private static final int MENU_REFRESH = 4;
 
     MyLocationOverlay _myLocationOverlay;
 
@@ -88,23 +86,27 @@ public class MainActivity extends MapActivity {
 
     StationFinder _finder;
 
-    private final BlockingQueue<Position> _searchRequestQueue = new LinkedBlockingQueue<Position>();
+    private final BlockingQueue<LookupPosition> _searchRequestQueue = new LinkedBlockingQueue<LookupPosition>();
+
+    private boolean _locationListenerIsRegistered;
 
     @Override  
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
 
-        _finder = new LuceneStationFinder( getApplicationContext() );
-        _uiThreadCallback = new Handler();
         
+        _finder = new GeohashStationFinder( );
+
+
+        _uiThreadCallback = new Handler();
+
         createOrLoadIndex();
 
         initViewMembers();  
         preloadIconBitmaps();
 
         _mapView.getOverlays().add( new TapListenerOverlay( this ) );
-        
+
         _locationManager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
 
         initMyLocationOverview();
@@ -120,32 +122,23 @@ public class MainActivity extends MapActivity {
     }
 
     private void createOrLoadIndex() {
-
-        final ProgressDialog pd = ProgressDialog.show( this, "Loading Station Data", "Loading station data, this might take some time on first run" );   
-
-        pd.show();
-
         new Thread() {
-
             @Override
             public void run() {
-                   try {
-                        _finder.createIndex( getResources().openRawResource( R.raw.stations ) );
-                    } catch ( final IOException e ) {
-                        showException( e );
-                    }
+                
+                try {
+                    _finder.createIndex( getResources().openRawResource( R.raw.stations ) );
+                } catch ( final IOException e ) {
+                    showException( e );
+                } finally {
 
                     new SearcherThread( MainActivity.this, _searchRequestQueue ).start();
 
-                    _uiThreadCallback.post( new Runnable() {
-                        
-                        public void run() {
-                            pd.dismiss();
-                        }
-                    } );
-                    
                 }
-            }.start();
+
+                
+            }
+        }.start();
         
     }
 
@@ -159,6 +152,15 @@ public class MainActivity extends MapActivity {
         _mapView = (MapView) findViewById(R.id.map);
         _mapView.setBuiltInZoomControls( true );
         _mc = _mapView.getController();
+    }
+
+    private void toggleLocationListener() {
+        if ( _locationListenerIsRegistered ) {
+            unregisterLocationListener();
+        } else {
+            _locationListenerIsRegistered = true;
+            registerLocationListener();
+        }
     }
 
     private void unregisterLocationListener() {
@@ -181,7 +183,6 @@ public class MainActivity extends MapActivity {
     protected void onResume() {
         super.onResume();
         _paused = false;
-        registerLocationListener();
         _myLocationOverlay.enableMyLocation();
         updateLocation( _mapView.getMapCenter() );
     }
@@ -190,7 +191,8 @@ public class MainActivity extends MapActivity {
     public boolean onCreateOptionsMenu( final Menu menu ) {
         menu.add(0, MENU_SHOW_POSITION, 0, "Show Position" ).setIcon( android.R.drawable.ic_menu_mylocation );
         menu.add(0, MENU_CONFIG, 0, "Configuration" ).setIcon( android.R.drawable.ic_menu_preferences );
-        //menu.add(0, MENU_UPDATE, 0, "Update" ).setIcon( android.R.drawable.ic_menu_upload );
+        menu.add(0, MENU_UPDATE, 0, "Toggle GPS Updates" ).setIcon( android.R.drawable.ic_menu_compass );
+        menu.add(0, MENU_REFRESH, 0, "Refresh" ).setIcon( android.R.drawable.ic_menu_search );
 
         return true;
     }
@@ -206,60 +208,18 @@ public class MainActivity extends MapActivity {
                 showConfig();
                 return true;
             case MENU_UPDATE:
-                updateData();
+                toggleLocationListener();
+                ProgressDialog.show( this, "GPS Updates", _locationListenerIsRegistered ? "Location updates activated" : "Location updates deactivated", true );
                 return true;
+                
+            case MENU_REFRESH:
+                 updateLocation( _mapView.getMapCenter() );
+                 return true;
 
         }
         return false;
     }
 
-    private void updateData() {
-
-        final ProgressDialog pd = ProgressDialog.show( this, "Update in Progress", "Download and parsing file from OpenStreetMap (ca. 6 MB)..." );   
-
-        pd.show();
-
-        new Thread() {
-
-            @Override
-            public void run() {
-                try {
-                    final Stations newOSMStations = OSMUpdater.getNewOSMStations();
-
-                    _uiThreadCallback.post( new Runnable() {
-                        
-                        public void run() {
-                            pd.setMessage( "Updating Search Index" );
-                        }
-                    } );
-                    
-                    _finder.updateIndex( newOSMStations );
-
-                    _uiThreadCallback.post( new Runnable() {
-                        
-                        public void run() {
-                            pd.dismiss();
-                        }
-                    } );
-
-
-                } catch ( final IOException e ) {
-                    _uiThreadCallback.post( new Runnable() {
-                        
-                        public void run() {
-                            pd.dismiss();
-                            showException( e );
-                        }
-                    } );
-                }
-
-            } 
-
-        }.start();
-        
-
-
-    }
 
     private void showConfig() {
         final Intent intend = new Intent( getApplicationContext(), ConfigActivity.class );
@@ -281,7 +241,10 @@ public class MainActivity extends MapActivity {
         final Location lastKnownLocation = manager.getLastKnownLocation( LocationManager.GPS_PROVIDER );
         if ( lastKnownLocation != null ) {
             updateLocation( lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude() );
+            _mc.animateTo( new GeoPoint( (int)Math.round( lastKnownLocation.getLatitude() * 1E6 ), (int)Math.round( lastKnownLocation.getLongitude() * 1E6 ) ) );
         } else {
+            updateLocation( _mapView.getMapCenter() );
+            
             //showNoLocationDialog();
         }
     }
@@ -323,8 +286,7 @@ public class MainActivity extends MapActivity {
     private void getAndDisplayResultsFor( final double lat, final double lon ) {
         if ( _paused ) return;
 
-        _searchRequestQueue.add(  Position.valueOf( lat, lon ) );
-        
+        _searchRequestQueue.add( new LookupPosition( lat, lon) );
 
     }
 
@@ -390,7 +352,7 @@ public class MainActivity extends MapActivity {
 
     boolean isPaused() {
         return _paused;
-        
+
     }
 
 

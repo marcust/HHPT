@@ -32,6 +32,5 @@ public interface StationFinder {
 
     Stations makeGeoLookup( double lat, double lon, double defaultSearchRadiusMiles ) throws LookupException;
 
-    void updateIndex( Stations newOSMStations ) throws IOException;
 
 }

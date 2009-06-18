@@ -26,8 +26,8 @@ import java.util.Iterator;
 import org.thiesen.hhpt.common.GeoLocationUtils;
 import org.thiesen.hhpt.shared.model.station.Station;
 import org.thiesen.hhpt.shared.model.station.Stations;
-import org.thiesen.hhpt.ui.activity.MainActivity;
 import org.thiesen.hhpt.ui.activity.StationDetailsActivity;
+import org.thiesen.hhpt.ui.activity.main.MainActivity;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -41,7 +41,7 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 
-public class StationMarkerLocationOverlay  extends Overlay {
+public class StationMarkerLocationOverlay extends Overlay {
 
 	//  Store these as global instances so we don't keep reloading every time
     private final Bitmap _busBmp;
