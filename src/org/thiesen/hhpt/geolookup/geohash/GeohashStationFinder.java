@@ -11,38 +11,22 @@
  */
 package org.thiesen.hhpt.geolookup.geohash;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.thiesen.hhpt.geolookup.StationFinder;
-import org.thiesen.hhpt.shared.io.StationReader;
+import org.thiesen.hhpt.geolookup.StationFinderBase;
 import org.thiesen.hhpt.shared.model.station.Station;
 import org.thiesen.hhpt.shared.model.station.Stations;
 import org.thiesen.hhpt.shared.utils.GeoHashUtils;
 
-public class GeohashStationFinder implements StationFinder  {
+public class GeohashStationFinder extends StationFinderBase implements StationFinder  {
     
     private final TreeNode _rootNode = new TreeNode();
     
-    public void createIndex( final InputStream stations ) throws IOException {
+    @Override
+    protected void indexOneStation( final Station s ) {
+        final int[] poshash = GeoHashUtils.convert( s.getGeoHashValue() );
         
-        final long startTime = System.currentTimeMillis();
-        
-        final StationReader reader = new StationReader( stations );
-
-        for ( final Station s : reader ) {
-            
-            final int[] poshash = GeoHashUtils.convert( s.getGeoHashValue() );
-        
-            _rootNode.addNode( poshash, s );
-            
-        }
-        
-        System.out.println("Indexing took " + ( System.currentTimeMillis() - startTime ) + " ms" );
-
-        
+        _rootNode.addNode( poshash, s );
     }
-
 
     public Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles )  {
         final long startTime = System.currentTimeMillis();
@@ -81,6 +65,9 @@ public class GeohashStationFinder implements StationFinder  {
         
         return filtered;
     }
+
+
+
 
 
 
