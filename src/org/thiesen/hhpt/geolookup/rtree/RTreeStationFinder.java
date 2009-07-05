@@ -11,13 +11,18 @@
  */
 package org.thiesen.hhpt.geolookup.rtree;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.lucene.spatial.geometry.shape.Point2D;
+import org.apache.lucene.spatial.tier.DistanceUtils;
 import org.thiesen.hhpt.geolookup.LookupException;
 import org.thiesen.hhpt.geolookup.StationFinder;
 import org.thiesen.hhpt.geolookup.StationFinderBase;
 import org.thiesen.hhpt.shared.model.station.Station;
+import org.thiesen.hhpt.shared.model.station.StationId;
 import org.thiesen.hhpt.shared.model.station.Stations;
-
-import android.location.Location;
 
 import com.infomatiq.jsi.Rectangle;
 import com.infomatiq.jsi.rtree.RTree;
@@ -25,10 +30,19 @@ import com.infomatiq.jsi.rtree.RTree;
 public class RTreeStationFinder extends StationFinderBase implements StationFinder {
 
     private final RTree _tree = new RTree();
+    private final Map<StationId, Station> _stationsById = new HashMap<StationId, Station>();
+    
+    public RTreeStationFinder() {
+        _tree.init( new Properties() );
+    }
     
     @Override
-    protected void indexOneStation( final Station s ) {
-        _tree.add( makeRectangle( s ), s.getId().intValue() );
+    protected void indexOneStation( final Station s ) 
+    {
+        
+        final StationId id = s.getId();
+        _tree.add( makeRectangle( s ), id.intValue() );
+        _stationsById.put( id, s );
     }
 
     private Rectangle makeRectangle( final Station s ) {
@@ -40,9 +54,19 @@ public class RTreeStationFinder extends StationFinderBase implements StationFind
     }
 
     public Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles ) throws LookupException {
-        return null;
+        final org.apache.lucene.spatial.geometry.shape.Rectangle boundary = DistanceUtils.getInstance().getBoundary( lat, lon, defaultSearchRadiusMiles );
+        
+        final CustomProcedure procedure = new CustomProcedure( _stationsById );
+        _tree.intersects( convertRectangle( boundary ), procedure );
         
         
+        return procedure.getStations();
+    }
+
+    private Rectangle convertRectangle( final org.apache.lucene.spatial.geometry.shape.Rectangle boundary ) {
+        final Point2D minPoint = boundary.getMinPoint();
+        final Point2D maxPoint = boundary.getMaxPoint();
+        return new Rectangle( (float)minPoint.getX(), (float)minPoint.getY(), (float)maxPoint.getX(), (float)maxPoint.getY() );
         
     }
 

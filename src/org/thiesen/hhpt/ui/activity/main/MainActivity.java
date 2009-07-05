@@ -27,6 +27,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.thiesen.hhpt.geolookup.StationFinder;
 import org.thiesen.hhpt.geolookup.geohash.GeohashStationFinder;
+import org.thiesen.hhpt.geolookup.mock.MockStationFinder;
+import org.thiesen.hhpt.geolookup.rtree.RTreeStationFinder;
 import org.thiesen.hhpt.ui.activity.ConfigActivity;
 import org.thiesen.hhpt.ui.activity.R;
 import org.thiesen.hhpt.ui.map.TapListenerOverlay;
@@ -95,7 +97,7 @@ public class MainActivity extends MapActivity {
         super.onCreate(savedInstanceState);
 
         
-        _finder = new GeohashStationFinder( );
+        _finder = new MockStationFinder();
 
 
         _uiThreadCallback = new Handler();
