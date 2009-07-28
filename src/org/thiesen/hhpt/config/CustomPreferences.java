@@ -48,7 +48,7 @@ public class CustomPreferences {
 
     public String getDefaultTarget() {
         
-        return _sharedPreferences.getString( DEFAULT_TARGET, "Mittelweg 44" );
+        return _sharedPreferences.getString( DEFAULT_TARGET, "Peter-Schulz-Str. 1, Lüneburg" );
     }
 
     public void setDefaultTarget( final CharSequence text ) {

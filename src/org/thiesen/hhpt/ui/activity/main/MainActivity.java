@@ -21,20 +21,16 @@
 
 package org.thiesen.hhpt.ui.activity.main;
 
-import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.thiesen.hhpt.geolookup.StationFinder;
-import org.thiesen.hhpt.geolookup.geohash.GeohashStationFinder;
-import org.thiesen.hhpt.geolookup.mock.MockStationFinder;
-import org.thiesen.hhpt.geolookup.rtree.RTreeStationFinder;
+import org.thiesen.hhpt.geolookup.appengine.AppEngineStationFinder;
 import org.thiesen.hhpt.ui.activity.ConfigActivity;
 import org.thiesen.hhpt.ui.activity.R;
 import org.thiesen.hhpt.ui.map.TapListenerOverlay;
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -50,6 +46,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
@@ -65,7 +62,7 @@ public class MainActivity extends MapActivity {
     private MapController _mc;  
     private final static int DEFAULT_ZOOM_VALUE = 17;
 
-    public static final double DEFAULT_SEARCH_RADIUS_MILES = 3.5D;
+    public static final double DEFAULT_SEARCH_RADIUS_MILES = 1.0D;
 
     private static final int MENU_SHOW_POSITION = 1;
     private static final int MENU_CONFIG = 2;  
@@ -96,13 +93,11 @@ public class MainActivity extends MapActivity {
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        
-        _finder = new MockStationFinder();
+        _finder = new AppEngineStationFinder();
 
+        new SearcherThread( MainActivity.this, _searchRequestQueue ).start();
 
         _uiThreadCallback = new Handler();
-
-        createOrLoadIndex();
 
         initViewMembers();  
         preloadIconBitmaps();
@@ -121,26 +116,8 @@ public class MainActivity extends MapActivity {
 
         useLastKnownLocation( _locationManager );
         Log.v( TAG, "On create finished");
-    }
-
-    private void createOrLoadIndex() {
-        new Thread() {
-            @Override
-            public void run() {
-                
-                try {
-                    _finder.createIndex( getResources().openRawResource( R.raw.stations ) );
-                } catch ( final IOException e ) {
-                    showException( e );
-                } finally {
-
-                    new SearcherThread( MainActivity.this, _searchRequestQueue ).start();
-
-                }
-
-                
-            }
-        }.start();
+        
+        updateLocation( 53.250721,10.433192 );
         
     }
 
@@ -210,16 +187,25 @@ public class MainActivity extends MapActivity {
                 showConfig();
                 return true;
             case MENU_UPDATE:
-                toggleLocationListener();
-                ProgressDialog.show( this, "GPS Updates", _locationListenerIsRegistered ? "Location updates activated" : "Location updates deactivated", true );
+                toggleAutomaticLocationUpdateState();
                 return true;
-                
             case MENU_REFRESH:
                  updateLocation( _mapView.getMapCenter() );
                  return true;
 
         }
         return false;
+    }
+
+    private void toggleAutomaticLocationUpdateState() {
+        toggleLocationListener();
+        
+        final Context context = getApplicationContext();
+        final CharSequence text =  _locationListenerIsRegistered ? "Location updates activated" : "Location updates deactivated";
+        final int duration = Toast.LENGTH_SHORT;
+
+        final Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
     }
 
 

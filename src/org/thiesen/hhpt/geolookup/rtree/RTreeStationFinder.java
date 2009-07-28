@@ -49,12 +49,12 @@ public class RTreeStationFinder extends StationFinderBase implements StationFind
         final float x = s.getPosition().getLatitude().floatValue();
         final float y = s.getPosition().getLongitude().floatValue();
         
-        final Rectangle r = new Rectangle( x, y, x, y );
+        final Rectangle r = new Rectangle( x, y, x + 1, y + 1 );
         return r;
     }
 
     public Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles ) throws LookupException {
-        final org.apache.lucene.spatial.geometry.shape.Rectangle boundary = DistanceUtils.getInstance().getBoundary( lat, lon, defaultSearchRadiusMiles );
+        final org.apache.lucene.spatial.geometry.shape.Rectangle boundary = DistanceUtils.getInstance().getBoundary( lat, lon, 1000 );
         
         final CustomProcedure procedure = new CustomProcedure( _stationsById );
         _tree.intersects( convertRectangle( boundary ), procedure );

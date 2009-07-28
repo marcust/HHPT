@@ -17,20 +17,27 @@ import java.io.InputStream;
 import org.thiesen.hhpt.shared.io.StationReader;
 import org.thiesen.hhpt.shared.model.station.Station;
 
+import android.os.Debug;
+
 public abstract class StationFinderBase implements StationFinder {
 
     public void createIndex( final InputStream stations ) throws IOException {
-        
+        Debug.startMethodTracing( "indexing" );
         final long startTime = System.currentTimeMillis();
         
         final StationReader reader = new StationReader( stations );
 
+        int count = 0;
         for ( final Station s : reader ) {
             indexOneStation( s );
+            if ( count++ == 100 ) {
+                break;
+            }
         }
         
         System.out.println("Indexing took " + ( System.currentTimeMillis() - startTime ) + " ms with strategy " + getClass().getSimpleName() );
 
+        Debug.stopMethodTracing();
     }
 
     protected abstract void indexOneStation( Station s );
