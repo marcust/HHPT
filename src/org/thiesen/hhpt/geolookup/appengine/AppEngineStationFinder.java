@@ -22,20 +22,13 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.thiesen.hhpt.geolookup.LookupException;
-import org.thiesen.hhpt.geolookup.StationFinderBase;
-import org.thiesen.hhpt.shared.model.station.Station;
+import org.thiesen.hhpt.geolookup.StationFinder;
 import org.thiesen.hhpt.shared.model.station.StationType;
 import org.thiesen.hhpt.shared.model.station.Stations;
 
-public class AppEngineStationFinder extends StationFinderBase {
+public class AppEngineStationFinder implements StationFinder {
 
-    @Override
-    protected void indexOneStation( final Station s ) {
-        throw new UnsupportedOperationException("Auto generated method stub");
-    }
-
-    public Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles ) throws LookupException {
+    public Stations makeGeoLookup( final double lat, final double lon, final double defaultSearchRadiusMiles ) {
         final HttpClient client = new DefaultHttpClient();
         final HttpGet get = new HttpGet( "http://hhpt-search.appspot.com/search?lat=" + lat + "&lng=" + lon +  "&radius=" + defaultSearchRadiusMiles );
         

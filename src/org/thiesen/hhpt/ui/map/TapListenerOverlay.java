@@ -53,7 +53,7 @@ public class TapListenerOverlay extends Overlay {
         
         final GeoPoint currentCenter = mapView.getMapCenter();
 
-        Log.d( MainActivity.TAG, "Got a on Touch event " + currentCenter );
+        //Log.d( MainActivity.TAG, "Got a on Touch event " + currentCenter );
 
         
         Location.distanceBetween( _oldCenter.getLatitudeE6() / 1E6D, 
@@ -63,7 +63,7 @@ public class TapListenerOverlay extends Overlay {
                                    _results ); 
         
         
-        Log.d( MainActivity.TAG, "Distance is " + _results[0] + " m" );
+        //Log.d( MainActivity.TAG, "Distance is " + _results[0] + " m" );
         
         if ( ( _results[0] / 1000 ) * 0.621371192 > MainActivity.DEFAULT_SEARCH_RADIUS_MILES / 2 ) {
             _oldCenter = currentCenter;

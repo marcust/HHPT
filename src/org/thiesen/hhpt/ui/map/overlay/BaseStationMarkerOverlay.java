@@ -63,11 +63,11 @@ public class BaseStationMarkerOverlay extends Overlay {
     }
 
     @Override
-    public void draw(final Canvas canvas, final MapView mapView, final boolean shadow) {
-        drawMapLocation(canvas, mapView, shadow);
+    public void draw(final Canvas canvas, final MapView mapView, @SuppressWarnings( "unused" ) final boolean shadow) {
+        drawMapLocation( canvas, mapView );
     }
 
-    private void drawMapLocation(final Canvas canvas, final MapView mapView, final boolean shadow) {
+    private void drawMapLocation(final Canvas canvas, final MapView mapView ) {
 
         final Point screenCoords = new Point();
         mapView.getProjection().toPixels(GeoLocationUtils.pointFromStation( _station ), screenCoords);

@@ -155,39 +155,7 @@ public class StationMarkerLocationOverlay extends Overlay {
     	}
     }
 
-//    private void drawInfoWindow(final Canvas canvas, final MapView	mapView, final boolean shadow) {
-//    	
-//    	if ( _selectedMapLocation != null) {
-//    		if ( shadow) {
-//    			//  Skip painting a shadow in this tutorial
-//    		} else {
-//				//  First determine the screen coordinates of the selected MapLocation
-//				final Point selDestinationOffset = new Point();
-//				mapView.getProjection().toPixels( GeoLocationUtils.pointFromStation( _selectedMapLocation ), selDestinationOffset);
-//		    	
-//		    	//  Setup the info window with the right size & location
-//				final int INFO_WINDOW_WIDTH = 125;
-//				final int INFO_WINDOW_HEIGHT = 25;
-//				final RectF infoWindowRect = new RectF(0,0,INFO_WINDOW_WIDTH,INFO_WINDOW_HEIGHT);				
-//				final int infoWindowOffsetX = selDestinationOffset.x-INFO_WINDOW_WIDTH/2;
-//				final int infoWindowOffsetY = selDestinationOffset.y-INFO_WINDOW_HEIGHT-_trainBmp.getHeight();
-//				infoWindowRect.offset(infoWindowOffsetX,infoWindowOffsetY);
-//
-//				//  Draw inner info window
-//				canvas.drawRoundRect(infoWindowRect, 5, 5, getInnerPaint());
-//				
-//				//  Draw border for info window
-//				canvas.drawRoundRect(infoWindowRect, 5, 5, getBorderPaint());
-//					
-//				//  Draw the MapLocation's name
-//				final int TEXT_OFFSET_X = 10;
-//				final int TEXT_OFFSET_Y = 15;
-//				canvas.drawText(_selectedMapLocation.getName(),infoWindowOffsetX+TEXT_OFFSET_X,infoWindowOffsetY+TEXT_OFFSET_Y,getTextPaint());
-//			}
-//    	}
-//    }
-
-	public Paint getInnerPaint() {
+    public Paint getInnerPaint() {
 		if ( innerPaint == null) {
 			innerPaint = new Paint();
 			innerPaint.setARGB(225, 75, 75, 75); //gray
