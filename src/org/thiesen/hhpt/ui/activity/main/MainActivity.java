@@ -117,7 +117,7 @@ public class MainActivity extends MapActivity {
         useLastKnownLocation( _locationManager );
         Log.v( TAG, "On create finished");
         
-        updateLocation( 53.250721,10.433192 );
+        //updateLocation( 53.250721,10.433192 );
         
     }
 
