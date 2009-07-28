@@ -24,7 +24,6 @@ package org.thiesen.hhpt.ui.map;
 import org.thiesen.hhpt.ui.activity.main.MainActivity;
 
 import android.location.Location;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import com.google.android.maps.GeoPoint;

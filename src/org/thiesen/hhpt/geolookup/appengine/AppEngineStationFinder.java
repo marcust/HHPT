@@ -75,7 +75,6 @@ public class AppEngineStationFinder implements StationFinder {
             retval.add( stationObj.getString( "id" ),
                     stationObj.getString( "lat" ),
                     stationObj.getString( "lng" ),
-                    null,
                     StationType.valueOf( stationObj.getString( "stationType" ) ),
                     stationObj.getString( "stationName" ),
                     stationObj.getString( "operator" ) );
