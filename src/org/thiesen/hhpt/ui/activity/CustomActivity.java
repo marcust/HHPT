@@ -21,16 +21,54 @@
 
 package org.thiesen.hhpt.ui.activity;
 
+import java.util.List;
+
 import org.thiesen.hhpt.common.GlobalConstants;
 import org.thiesen.hhpt.config.CustomPreferences;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.location.Location;
+import android.location.LocationManager;
 
 public class CustomActivity extends Activity {
 
     protected CustomPreferences preferences() {
         return new CustomPreferences(  getSharedPreferences( GlobalConstants.MY_PREFS,  0 ) );
     }
+    
+    protected boolean isIntentAvailable(final Context context, final String action ) {
+        final PackageManager packageManager = context.getPackageManager();
+        final Intent intent = new Intent(action);
+        final List<ResolveInfo> list =
+                packageManager.queryIntentActivities(intent,
+                        PackageManager.MATCH_DEFAULT_ONLY);
+        return list.size() > 0;
+    }
+
+    protected Location getBestLastKnownLocation() {
+        final LocationManager locationManager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
+        
+        final Location lastKnownGpsLocation = locationManager.getLastKnownLocation( LocationManager.GPS_PROVIDER );
+        
+        if ( lastKnownGpsLocation != null ) {
+            return lastKnownGpsLocation;
+        }
+        
+        final Location lastKnownNetworkLocation = locationManager.getLastKnownLocation( LocationManager.NETWORK_PROVIDER );
+        
+        if ( lastKnownNetworkLocation != null ) {
+            return lastKnownNetworkLocation;
+        }
+        
+        return null;
+
+    
+    }
+    
     
     
 }

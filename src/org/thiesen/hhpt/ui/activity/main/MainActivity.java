@@ -226,7 +226,12 @@ public class MainActivity extends MapActivity {
     }
 
     private void useLastKnownLocation( final LocationManager manager ) {
-        final Location lastKnownLocation = manager.getLastKnownLocation( LocationManager.GPS_PROVIDER );
+        Location lastKnownLocation = manager.getLastKnownLocation( LocationManager.GPS_PROVIDER );
+        
+        if ( lastKnownLocation == null ) {
+            lastKnownLocation = manager.getLastKnownLocation( LocationManager.NETWORK_PROVIDER );
+        }
+        
         if ( lastKnownLocation != null ) {
             updateLocation( lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude() );
             _mc.animateTo( new GeoPoint( (int)Math.round( lastKnownLocation.getLatitude() * 1E6 ), (int)Math.round( lastKnownLocation.getLongitude() * 1E6 ) ) );

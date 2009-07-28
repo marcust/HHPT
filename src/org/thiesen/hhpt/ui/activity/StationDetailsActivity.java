@@ -39,6 +39,8 @@ import org.thiesen.hhpt.beans.Carriers;
 import org.thiesen.hhpt.shared.model.station.Station;
 
 import android.content.Intent;
+import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.telephony.gsm.SmsManager;
 import android.view.View;
@@ -68,14 +70,49 @@ public class StationDetailsActivity extends CustomActivity {
         
         targetTime.setText( format.format( currentTime.getTime() ) );
         
-        final Button openButton = (Button) findViewById(R.id.openButton);
-        
         final Intent i = getIntent();
         
         final Station station = (Station) i.getExtras().get( Station.STATION );
         
         employeeView.setText( station.getName() );
         titleView.setText( station.getType().toString() );
+        
+        initOpenButton( feedback, targetText, targetTime, station );
+        initRadarButton( station );
+        
+        initMapsButton( station );
+    }
+
+    private void initMapsButton( final Station station ) {
+        final Location bestLastKnownLocation = getBestLastKnownLocation();
+        final Button mapsButton = (Button) findViewById(R.id.mapsButton);
+        
+        if ( bestLastKnownLocation != null ) {
+            final String sourcePart = bestLastKnownLocation.getLatitude() + "," + bestLastKnownLocation.getLongitude();
+            final String destinationPart = station.getPosition().getLatitude() + "," + station.getPosition().getLongitude();
+            
+            final String url = "http://maps.google.com/maps?saddr=" + sourcePart + "&daddr=" +  destinationPart + "&dirflg=w";
+            
+  
+            mapsButton.setOnClickListener( new View.OnClickListener() {
+            
+                public void onClick( @SuppressWarnings( "unused" ) final View v ) {
+                    startActivity(new Intent(Intent.ACTION_VIEW,  
+                            Uri.parse(url) ));
+                    
+                
+                }
+            } );
+            
+        } else {
+            mapsButton.setEnabled( false );
+        }
+        
+    }
+
+    private void initOpenButton( final TextView feedback, final TextView targetText, final TextView targetTime, final Station station ) {
+        final Button openButton = (Button) findViewById(R.id.openButton);
+        
         
         if ( station.getName().length() == 0 ) {
             openButton.setEnabled(  false  );
@@ -105,9 +142,27 @@ public class StationDetailsActivity extends CustomActivity {
                 preferences().setDefaultTarget( targetText.getText() );
             }
         } );
+    }
+
+    private void initRadarButton( final Station station ) {
+        final Button radarButton = (Button) findViewById(R.id.radarButton);
+        final String radarIntent = "com.google.android.radar.SHOW_RADAR";
+       
+        if ( isIntentAvailable( getApplicationContext(), radarIntent ) ) {
         
-        
-        
+            radarButton.setOnClickListener( new View.OnClickListener() {
+
+                public void onClick( @SuppressWarnings("unused") final View v ) {
+                    final Intent i = new Intent( radarIntent );
+                    i.putExtra("latitude", station.getPosition().getLatitude().floatValue() );
+                    i.putExtra("longitude", station.getPosition().getLongitude().floatValue() );
+                    startActivity(i); 
+                }
+            } );
+
+        } else {
+            radarButton.setEnabled( false );
+        }
         
         
     }
