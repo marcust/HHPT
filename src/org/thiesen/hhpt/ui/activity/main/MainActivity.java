@@ -26,6 +26,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.thiesen.hhpt.geolookup.StationFinder;
 import org.thiesen.hhpt.geolookup.appengine.AppEngineStationFinder;
+import org.thiesen.hhpt.shared.model.position.Position;
 import org.thiesen.hhpt.ui.activity.ConfigActivity;
 import org.thiesen.hhpt.ui.activity.R;
 import org.thiesen.hhpt.ui.map.TapListenerOverlay;
@@ -89,7 +90,7 @@ public class MainActivity extends MapActivity {
 
     private boolean _locationListenerIsRegistered;
 
-    private GeoPoint _lastLocation;
+    private Position _lastPosition;
 
     @Override  
     public void onCreate(final Bundle savedInstanceState) {
@@ -258,7 +259,6 @@ public class MainActivity extends MapActivity {
     }
 
     private void updateLocation( final GeoPoint myLocation ) {
-        _lastLocation = myLocation;
         updateLocation( myLocation.getLatitudeE6() / 1E6D, myLocation.getLongitudeE6()  / 1E6D );   
     }
 
@@ -267,6 +267,8 @@ public class MainActivity extends MapActivity {
     }
 
     void updateLocation( final double lat, final double lon ) {
+        _lastPosition = Position.valueOf( lat, lon );
+        
         Log.d( TAG, "Starting updateLocation " + lat + ", " + lon );
 
         Log.d( TAG, "My Location: " + _myLocationOverlay.getMyLocation() );
@@ -353,8 +355,8 @@ public class MainActivity extends MapActivity {
 
     }
 
-    public GeoPoint getLastLocaton() {
-        return _lastLocation;
+    public Position getLastPosition() {
+        return _lastPosition;
     }
 
 

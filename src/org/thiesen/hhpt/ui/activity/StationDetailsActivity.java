@@ -28,12 +28,14 @@ import java.util.Calendar;
 import org.thiesen.hhpt.beans.Carriers;
 import org.thiesen.hhpt.shared.model.position.Position;
 import org.thiesen.hhpt.shared.model.station.Station;
+import org.thiesen.hhpt.ui.activity.main.MainActivity;
 import org.thiesen.hhpt.ui.common.IntentExtras;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.telephony.gsm.SmsManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -49,6 +51,8 @@ public class StationDetailsActivity extends CustomActivity {
         final Intent i = getIntent();
         final Station station = (Station) i.getExtras().get( Station.STATION );
         final Position position = (Position) i.getExtras().get( IntentExtras.CURRENT_LOCATION );
+        
+        Log.i( MainActivity.TAG, "Got position " + position );
         
         initTargetTextFromConfig();
         

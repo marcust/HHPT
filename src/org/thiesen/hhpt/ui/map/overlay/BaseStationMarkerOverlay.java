@@ -21,10 +21,12 @@
 package org.thiesen.hhpt.ui.map.overlay;
 
 import org.thiesen.hhpt.common.GeoLocationUtils;
+import org.thiesen.hhpt.shared.model.position.Position;
 import org.thiesen.hhpt.shared.model.station.Station;
 import org.thiesen.hhpt.ui.activity.StationDetailsActivity;
+import org.thiesen.hhpt.ui.activity.main.MainActivity;
+import org.thiesen.hhpt.ui.common.IntentExtras;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -40,9 +42,9 @@ public class BaseStationMarkerOverlay extends Overlay {
 
     private final Bitmap _marker;
     private final Station _station;
-    private final Activity _baseActivity;
+    private final MainActivity _baseActivity;
 
-    public BaseStationMarkerOverlay( final Activity baseActivity, final Bitmap marker, final Station station ) {
+    public BaseStationMarkerOverlay( final MainActivity baseActivity, final Bitmap marker, final Station station ) {
         _baseActivity = baseActivity;
         _marker = marker;
         _station = station;
@@ -66,8 +68,11 @@ public class BaseStationMarkerOverlay extends Overlay {
 
         final Intent intent = new Intent( _baseActivity.getApplicationContext(), StationDetailsActivity.class );
         intent.putExtra( Station.STATION, _station );
-        _baseActivity.startActivity( intent );
+        final Position lastPosition = _baseActivity.getLastPosition();
 
+        intent.putExtra( IntentExtras.CURRENT_LOCATION, lastPosition );
+        
+        _baseActivity.startActivity( intent );
         return true;
     }
 
