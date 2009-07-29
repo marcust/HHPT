@@ -21,6 +21,7 @@
 
 package org.thiesen.hhpt.common;
 
+import org.thiesen.hhpt.shared.model.position.Position;
 import org.thiesen.hhpt.shared.model.station.Station;
 
 import com.google.android.maps.GeoPoint;
@@ -30,6 +31,10 @@ public class GeoLocationUtils {
     public static GeoPoint pointFromStation( final Station testLocation ) {
         return new GeoPoint( testLocation.getPosition().getLatitudeE6(), testLocation.getPosition().getLongitudeE6() );
         
+    }
+
+    public static Position positionFrom( final GeoPoint lastLocaton ) {
+       return Position.valueOf( lastLocaton.getLatitudeE6(), lastLocaton.getLongitudeE6() );
     }
 
 }

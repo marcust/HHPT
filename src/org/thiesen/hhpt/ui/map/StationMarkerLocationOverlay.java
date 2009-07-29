@@ -28,6 +28,7 @@ import org.thiesen.hhpt.shared.model.station.Station;
 import org.thiesen.hhpt.shared.model.station.Stations;
 import org.thiesen.hhpt.ui.activity.StationDetailsActivity;
 import org.thiesen.hhpt.ui.activity.main.MainActivity;
+import org.thiesen.hhpt.ui.common.IntentExtras;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -81,6 +82,7 @@ public class StationMarkerLocationOverlay extends Overlay {
 		if ( _selectedMapLocation != null ) {
 		    final Intent intent = new Intent( _shower.getApplicationContext(), StationDetailsActivity.class );
 		    intent.putExtra( Station.STATION, _selectedMapLocation );
+		    intent.putExtra( IntentExtras.CURRENT_LOCATION, GeoLocationUtils.positionFrom( _shower.getLastLocaton() ) );
 		    _shower.startActivity( intent );
 		    
 		}

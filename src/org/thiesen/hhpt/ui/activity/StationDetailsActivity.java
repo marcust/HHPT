@@ -1,18 +1,5 @@
 /*
  * $ Id $
- * (c) Copyright 2009 freiheit.com technologies gmbh
- *
- * This file contains unpublished, proprietary trade secret information of
- * freiheit.com technologies gmbh. Use, transcription, duplication and
- * modification are strictly prohibited without prior written consent of
- * freiheit.com technologies gmbh.
- *
- * Initial version by Marcus Thiesen (marcus.thiesen@freiheit.com)
- */
-package org.thiesen.hhpt.ui.activity;
-
-/*
- * $ Id $
  * (c) Copyright 2009 Marcus Thiesen (marcus@thiesen.org)
  *
  *  This file is part of HHPT.
@@ -31,15 +18,19 @@ package org.thiesen.hhpt.ui.activity;
  *  along with HHPT.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+package org.thiesen.hhpt.ui.activity;
+
+
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import org.thiesen.hhpt.beans.Carriers;
+import org.thiesen.hhpt.shared.model.position.Position;
 import org.thiesen.hhpt.shared.model.station.Station;
+import org.thiesen.hhpt.ui.common.IntentExtras;
 
 import android.content.Intent;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.telephony.gsm.SmsManager;
@@ -54,14 +45,37 @@ public class StationDetailsActivity extends CustomActivity {
     protected void onCreate( final Bundle savedInstanceState ) {
         super.onCreate(savedInstanceState);  
         setContentView(R.layout.station_details);  
-        final TextView titleView = (TextView) findViewById(R.id.title);
-        final TextView feedback = (TextView) findViewById(R.id.feedback);
-        final TextView employeeView = (TextView) findViewById(R.id.employee);
         
+        final Intent i = getIntent();
+        final Station station = (Station) i.getExtras().get( Station.STATION );
+        final Position position = (Position) i.getExtras().get( IntentExtras.CURRENT_LOCATION );
+        
+        initTargetTextFromConfig();
+        
+        setTargetTimeInputValue();
+        
+        setDisplayValues( station );
+        
+        initOpenButton( station );
+        initRadarButton( station );
+        
+        initMapsButton( position, station );
+    }
+
+    private void initTargetTextFromConfig() {
         final TextView targetText = (TextView) findViewById(R.id.edittext);
-        final TextView targetTime = (TextView) findViewById(R.id.edittime);
-        
         targetText.setText( preferences().getDefaultTarget() );
+    }
+
+    private void setDisplayValues( final Station station ) {
+        final TextView titleView = (TextView) findViewById(R.id.title);
+        final TextView employeeView = (TextView) findViewById(R.id.employee);
+        employeeView.setText( station.getName() );
+        titleView.setText( station.getType().toString() );
+    }
+
+    private void setTargetTimeInputValue( ) {
+        final TextView targetTime = (TextView) findViewById(R.id.edittime);
         
         final Calendar currentTime = Calendar.getInstance();
         currentTime.add( Calendar.MINUTE, 5 );
@@ -69,26 +83,13 @@ public class StationDetailsActivity extends CustomActivity {
         final SimpleDateFormat format = new SimpleDateFormat("HH:mm");
         
         targetTime.setText( format.format( currentTime.getTime() ) );
-        
-        final Intent i = getIntent();
-        
-        final Station station = (Station) i.getExtras().get( Station.STATION );
-        
-        employeeView.setText( station.getName() );
-        titleView.setText( station.getType().toString() );
-        
-        initOpenButton( feedback, targetText, targetTime, station );
-        initRadarButton( station );
-        
-        initMapsButton( station );
     }
 
-    private void initMapsButton( final Station station ) {
-        final Location bestLastKnownLocation = getBestLastKnownLocation();
+    private void initMapsButton( final Position position, final Station station ) {
         final Button mapsButton = (Button) findViewById(R.id.mapsButton);
         
-        if ( bestLastKnownLocation != null ) {
-            final String sourcePart = bestLastKnownLocation.getLatitude() + "," + bestLastKnownLocation.getLongitude();
+        if ( position != null ) {
+            final String sourcePart = position.getLatitude() + "," + position.getLongitude();
             final String destinationPart = station.getPosition().getLatitude() + "," + station.getPosition().getLongitude();
             
             final String url = "http://maps.google.com/maps?saddr=" + sourcePart + "&daddr=" +  destinationPart + "&dirflg=w";
@@ -99,8 +100,6 @@ public class StationDetailsActivity extends CustomActivity {
                 public void onClick( @SuppressWarnings( "unused" ) final View v ) {
                     startActivity(new Intent(Intent.ACTION_VIEW,  
                             Uri.parse(url) ));
-                    
-                
                 }
             } );
             
@@ -110,7 +109,7 @@ public class StationDetailsActivity extends CustomActivity {
         
     }
 
-    private void initOpenButton( final TextView feedback, final TextView targetText, final TextView targetTime, final Station station ) {
+    private void initOpenButton( final Station station ) {
         final Button openButton = (Button) findViewById(R.id.openButton);
         
         
@@ -125,6 +124,11 @@ public class StationDetailsActivity extends CustomActivity {
         openButton.setOnClickListener( new View.OnClickListener() {
         
             public void onClick( @SuppressWarnings("unused") final View v ) {
+                final TextView targetText = (TextView) findViewById(R.id.edittext);
+                final TextView feedback = (TextView) findViewById(R.id.feedback);
+                final TextView targetTime = (TextView) findViewById(R.id.edittime);
+
+                
                 final SmsManager sms = SmsManager.getDefault();
                 
                 final String targetTimeValue = String.valueOf( targetTime.getText() );

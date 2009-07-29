@@ -89,6 +89,8 @@ public class MainActivity extends MapActivity {
 
     private boolean _locationListenerIsRegistered;
 
+    private GeoPoint _lastLocation;
+
     @Override  
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -238,8 +240,7 @@ public class MainActivity extends MapActivity {
             _mc.animateTo( new GeoPoint( (int)Math.round( lastKnownLocation.getLatitude() * 1E6 ), (int)Math.round( lastKnownLocation.getLongitude() * 1E6 ) ) );
         } else {
             updateLocation( _mapView.getMapCenter() );
-            
-            //showNoLocationDialog();
+
         }
     }
 
@@ -257,6 +258,7 @@ public class MainActivity extends MapActivity {
     }
 
     private void updateLocation( final GeoPoint myLocation ) {
+        _lastLocation = myLocation;
         updateLocation( myLocation.getLatitudeE6() / 1E6D, myLocation.getLongitudeE6()  / 1E6D );   
     }
 
@@ -349,6 +351,10 @@ public class MainActivity extends MapActivity {
     boolean isPaused() {
         return _paused;
 
+    }
+
+    public GeoPoint getLastLocaton() {
+        return _lastLocation;
     }
 
 
