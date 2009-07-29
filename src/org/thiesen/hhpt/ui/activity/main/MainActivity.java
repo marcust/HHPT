@@ -136,9 +136,10 @@ public class MainActivity extends MapActivity {
     private void toggleLocationListener() {
         if ( _locationListenerIsRegistered ) {
             unregisterLocationListener();
+            _locationListenerIsRegistered = false;
         } else {
-            _locationListenerIsRegistered = true;
             registerLocationListener();
+            _locationListenerIsRegistered = true;
         }
     }
 
@@ -322,6 +323,8 @@ public class MainActivity extends MapActivity {
 
 
         });
+        
+        _mapView.getOverlays().add( _myLocationOverlay );
 
     } 
 
