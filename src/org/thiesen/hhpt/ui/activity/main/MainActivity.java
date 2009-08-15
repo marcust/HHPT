@@ -69,8 +69,9 @@ public class MainActivity extends MapActivity {
     private static final int MENU_CONFIG = 2;  
     private static final int MENU_UPDATE = 3;
     private static final int MENU_REFRESH = 4;
+    private static final int MENU_SHOW_AR = 5;
 
-    MyLocationOverlay _myLocationOverlay;
+    private MyLocationOverlay _myLocationOverlay;
 
     Bitmap _busBmp;
 
@@ -92,13 +93,16 @@ public class MainActivity extends MapActivity {
 
     private Position _lastPosition;
 
+    private SearcherThread _searchThread;
+
     @Override  
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         _finder = new AppEngineStationFinder();
 
-        new SearcherThread( MainActivity.this, _searchRequestQueue ).start();
+        _searchThread = new SearcherThread( MainActivity.this, _searchRequestQueue );
+        _searchThread.start();
 
         _uiThreadCallback = new Handler();
 
@@ -119,12 +123,14 @@ public class MainActivity extends MapActivity {
 
         useLastKnownLocation( _locationManager );
         Log.v( TAG, "On create finished");
-        
+
         //updateLocation( 53.250721,10.433192 );
-        
+
     }
 
     private void preloadIconBitmaps() {
+        
+      
         _busBmp = BitmapFactory.decodeResource(getResources(),R.drawable.bus);
         _trainBmp = BitmapFactory.decodeResource(getResources(),R.drawable.train);
     }
@@ -176,6 +182,7 @@ public class MainActivity extends MapActivity {
         menu.add(0, MENU_CONFIG, 0, "Configuration" ).setIcon( android.R.drawable.ic_menu_preferences );
         menu.add(0, MENU_UPDATE, 0, "Toggle GPS Updates" ).setIcon( android.R.drawable.ic_menu_compass );
         menu.add(0, MENU_REFRESH, 0, "Refresh" ).setIcon( android.R.drawable.ic_menu_search );
+        menu.add(0, MENU_SHOW_AR, 0, "AR View" );
 
         return true;
     }
@@ -194,16 +201,32 @@ public class MainActivity extends MapActivity {
                 toggleAutomaticLocationUpdateState();
                 return true;
             case MENU_REFRESH:
-                 updateLocation( _mapView.getMapCenter() );
-                 return true;
+                updateLocation( _mapView.getMapCenter() );
+                return true;
+            case MENU_SHOW_AR:
+                sendARIntent();
 
         }
         return false;
     }
+    
+    private void sendARIntent() {
+//        final WikitudeARHelper helper = new WikitudeARHelper( getApplication(),
+//                getResources().getResourceName( R.drawable.train ),
+//                getResources().getResourceName( R.drawable.bus ) );
+//        
+//        final Intent intent = helper.makeWikitudeIntent( _searchThread.getDisplayedStations() );
+//                        
+//        
+//        startActivity(intent);
+//                    
+//                
+    }
+
 
     private void toggleAutomaticLocationUpdateState() {
         toggleLocationListener();
-        
+
         final Context context = getApplicationContext();
         final CharSequence text =  _locationListenerIsRegistered ? "Location updates activated" : "Location updates deactivated";
         final int duration = Toast.LENGTH_SHORT;
@@ -231,11 +254,11 @@ public class MainActivity extends MapActivity {
 
     private void useLastKnownLocation( final LocationManager manager ) {
         Location lastKnownLocation = manager.getLastKnownLocation( LocationManager.GPS_PROVIDER );
-        
+
         if ( lastKnownLocation == null ) {
             lastKnownLocation = manager.getLastKnownLocation( LocationManager.NETWORK_PROVIDER );
         }
-        
+
         if ( lastKnownLocation != null ) {
             updateLocation( lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude() );
             _mc.animateTo( new GeoPoint( (int)Math.round( lastKnownLocation.getLatitude() * 1E6 ), (int)Math.round( lastKnownLocation.getLongitude() * 1E6 ) ) );
@@ -268,7 +291,7 @@ public class MainActivity extends MapActivity {
 
     void updateLocation( final double lat, final double lon ) {
         _lastPosition = Position.valueOf( lat, lon );
-        
+
         Log.d( TAG, "Starting updateLocation " + lat + ", " + lon );
 
         Log.d( TAG, "My Location: " + _myLocationOverlay.getMyLocation() );
@@ -327,7 +350,7 @@ public class MainActivity extends MapActivity {
 
 
         });
-        
+
         _mapView.getOverlays().add( _myLocationOverlay );
 
     } 

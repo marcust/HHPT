@@ -36,12 +36,20 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.telephony.gsm.SmsManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 public class StationDetailsActivity extends CustomActivity {
 
+    private final static String RADAR_INTENT = "com.google.android.radar.SHOW_RADAR";
+    private static final int MENU_SHOW_DIRECTIONS = 1;
+    private static final int MENU_SHOW_RADAR = 2;
+    private static final int MENU_SHOW_AR = 3;
+    private Station _station;
+    private Position _lastPosition;
     
     @Override
     protected void onCreate( final Bundle savedInstanceState ) {
@@ -61,9 +69,10 @@ public class StationDetailsActivity extends CustomActivity {
         setDisplayValues( station );
         
         initOpenButton( station );
-        initRadarButton( station );
         
-        initMapsButton( position, station );
+        _station = station;
+        _lastPosition = position;
+        
     }
 
     private void initTargetTextFromConfig() {
@@ -89,28 +98,15 @@ public class StationDetailsActivity extends CustomActivity {
         targetTime.setText( format.format( currentTime.getTime() ) );
     }
 
-    private void initMapsButton( final Position position, final Station station ) {
-        final Button mapsButton = (Button) findViewById(R.id.mapsButton);
+    private void showDirections( ) {
+        final String sourcePart = _lastPosition.getLatitude() + "," + _lastPosition.getLongitude();
+        final String destinationPart = _station.getPosition().getLatitude() + "," + _station.getPosition().getLongitude();
         
-        if ( position != null ) {
-            final String sourcePart = position.getLatitude() + "," + position.getLongitude();
-            final String destinationPart = station.getPosition().getLatitude() + "," + station.getPosition().getLongitude();
-            
-            final String url = "http://maps.google.com/maps?saddr=" + sourcePart + "&daddr=" +  destinationPart + "&dirflg=w";
-            
-  
-            mapsButton.setOnClickListener( new View.OnClickListener() {
-            
-                public void onClick( @SuppressWarnings( "unused" ) final View v ) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,  
-                            Uri.parse(url) ));
-                }
-            } );
-            
-        } else {
-            mapsButton.setEnabled( false );
-        }
+        final String url = "http://maps.google.com/maps?saddr=" + sourcePart + "&daddr=" +  destinationPart + "&dirflg=w";
+                  
         
+        startActivity(new Intent(Intent.ACTION_VIEW,  
+                        Uri.parse(url) ));
     }
 
     private void initOpenButton( final Station station ) {
@@ -152,29 +148,56 @@ public class StationDetailsActivity extends CustomActivity {
         } );
     }
 
-    private void initRadarButton( final Station station ) {
-        final Button radarButton = (Button) findViewById(R.id.radarButton);
-        final String radarIntent = "com.google.android.radar.SHOW_RADAR";
-       
-        if ( isIntentAvailable( getApplicationContext(), radarIntent ) ) {
-        
-            radarButton.setOnClickListener( new View.OnClickListener() {
 
-                public void onClick( @SuppressWarnings("unused") final View v ) {
-                    final Intent i = new Intent( radarIntent );
-                    i.putExtra("latitude", station.getPosition().getLatitude().floatValue() );
-                    i.putExtra("longitude", station.getPosition().getLongitude().floatValue() );
-                    startActivity(i); 
-                }
-            } );
-
-        } else {
-            radarButton.setEnabled( false );
-        }
-        
-        
+    private void showRadar() {
+        final Intent i = new Intent( RADAR_INTENT );
+        i.putExtra("latitude", _station.getPosition().getLatitude().floatValue() );
+        i.putExtra("longitude", _station.getPosition().getLongitude().floatValue() );
+        startActivity(i);
     }
 
+    private boolean isRadarAvailable() {
+        return isIntentAvailable( getApplicationContext(), RADAR_INTENT );
+    }
+
+    
+    
+    @Override
+    public boolean onCreateOptionsMenu( final Menu menu ) {
+        menu.add(0, MENU_SHOW_DIRECTIONS, 0, "Show Directions" ).setIcon( android.R.drawable.ic_menu_mapmode );
+        
+        if ( isRadarAvailable() ) {
+            menu.add(0, MENU_SHOW_RADAR, 0, "Show Radar" ).setIcon( android.R.drawable.ic_menu_compass );
+        }
+        menu.add(0, MENU_SHOW_AR, 0, "AR View" );
+
+        return true;
+    }
+
+    
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        switch (item.getItemId()) {
+            case MENU_SHOW_DIRECTIONS:
+                showDirections();
+                return true;
+            case MENU_SHOW_RADAR: 
+                showRadar();
+                return true;
+            case MENU_SHOW_AR:
+                showAr();
+                return true;
+
+        }
+        return false;
+    }
+
+    private void showAr() {
+//        final WikitudeARHelper helper = new WikitudeARHelper( getApplication(),
+//                getResources().getResourceName( R.drawable.train ),
+//                getResources().getResourceName( R.drawable.bus ) );
+//        startActivity( helper.makeWikitudeIntent( _station ) );
+    }
     
     
     

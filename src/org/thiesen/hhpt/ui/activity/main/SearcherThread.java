@@ -20,6 +20,7 @@
  */
 package org.thiesen.hhpt.ui.activity.main;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -37,7 +38,7 @@ final class SearcherThread extends Thread {
     private final Set<Station> _displayedStations;
 
     SearcherThread( final MainActivity mainActivity, final BlockingQueue<LookupPosition> requestQueue ) {
-        _displayedStations = new HashSet<Station>();
+        _displayedStations = Collections.synchronizedSet( new HashSet<Station>() );
         
         _mainActivity = mainActivity;
         _mySearchRequestQueue = requestQueue;
@@ -94,8 +95,10 @@ final class SearcherThread extends Thread {
                 SearcherThread.this._mainActivity._mapView.getOverlays().add( overlay );
             }
         });
-
-        
+    }
+    
+    public Stations getDisplayedStations() {
+        return new Stations( _displayedStations );
     }
 
 }
